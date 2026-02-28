@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 const VALUE_LEVELS = [200, 400, 600, 800, 1000];
 const ROUND_NAME = "Jeopardy!";
-const DATA_URL = "/JEOPARDY_CSV.csv";
+const DATA_URL = `${import.meta.env.BASE_URL}JEOPARDY_CSV.csv`;
 
 function parseCSV(text) {
   const rows = [];
