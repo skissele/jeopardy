@@ -128,6 +128,9 @@ export default function App() {
   const [choices, setChoices] = useState([]);
   const [selectedChoice, setSelectedChoice] = useState("");
   const [answerResult, setAnswerResult] = useState(null);
+  const [showScores, setShowScores] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [highScores, setHighScores] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -148,6 +151,17 @@ export default function App() {
       }
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("jeopardyHighScores");
+      if (stored) {
+        setHighScores(JSON.parse(stored));
+      }
+    } catch (err) {
+      setHighScores([]);
+    }
   }, []);
 
   const boardReady = useMemo(() => game.length === 6, [game]);
@@ -205,6 +219,7 @@ export default function App() {
     const nextGame = buildGame(rows);
     setGame(nextGame);
     setSelected(null);
+    setShowScores(false);
     setRevealed(false);
     setAnswered({});
     setScore(0);
@@ -253,6 +268,22 @@ export default function App() {
     setScore((prev) => prev + (isMatch ? selected.value : -selected.value));
   }
 
+  function saveHighScore() {
+    const trimmed = playerName.trim();
+    if (!trimmed) return;
+    const entry = {
+      name: trimmed,
+      score,
+      date: new Date().toISOString()
+    };
+    const next = [...highScores, entry]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+    setHighScores(next);
+    setPlayerName("");
+    localStorage.setItem("jeopardyHighScores", JSON.stringify(next));
+  }
+
   return (
     <div className="app">
       <header className="hero">
@@ -267,6 +298,13 @@ export default function App() {
         <div className="hero-actions">
           <button className="primary" onClick={startNewGame}>
             Start Game!
+          </button>
+          <button
+            className="secondary"
+            onClick={() => setShowScores(true)}
+            disabled={!!selected}
+          >
+            High Scores
           </button>
           <div className="score">
             <span>Score</span>
@@ -342,6 +380,50 @@ export default function App() {
             <button className="close" onClick={() => setSelected(null)}>
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {showScores && !selected && (
+        <div className="modal">
+          <div className="modal-card scores-card">
+            <div className="modal-header">
+              <span>High Scores</span>
+              <button className="ghost" onClick={() => setShowScores(false)}>
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="score-entry">
+                <label htmlFor="playerName">Enter your name</label>
+                <div className="score-entry-row">
+                  <input
+                    id="playerName"
+                    type="text"
+                    value={playerName}
+                    onChange={(event) => setPlayerName(event.target.value)}
+                    placeholder="Contestant name"
+                  />
+                  <button className="primary" onClick={saveHighScore}>
+                    Save Score
+                  </button>
+                </div>
+                <p className="score-hint">Current score: {score}</p>
+              </div>
+              <div className="scores-list">
+                {highScores.length === 0 ? (
+                  <p className="score-empty">No scores yet. Be the first!</p>
+                ) : (
+                  highScores.map((entry, index) => (
+                    <div key={`${entry.name}-${entry.date}`} className="score-row">
+                      <span className="score-rank">#{index + 1}</span>
+                      <span className="score-name">{entry.name}</span>
+                      <span className="score-value">{entry.score}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
