@@ -2,6 +2,8 @@
 
 A Jeopardy-style trivia board built from a CSV dataset, with randomized categories, multiple-choice answers, and score tracking.
 
+https://skissele.github.io/jeopardy/
+
 ## Tech
 - React + Vite
 - CSV-driven questions
